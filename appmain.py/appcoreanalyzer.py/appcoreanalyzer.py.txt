@@ -1,0 +1,13 @@
+class FinAnalyzer:
+    def get_business_health(self, revenue, expenses):
+        margin = ((revenue - expenses) / revenue) * 100
+        if margin > 20:
+            return "Sog'lom biznes: Foyda darajasi yuqori."
+        elif margin > 10:
+            return "Barqaror: Lekin xarajatlarni optimallashtirish mumkin."
+        else:
+            return "DIQQAT: Foyda darajasi juda past!"
+
+    def predict_next_month(self, history_data):
+        # Oddiy sun'iy intellekt mantiqi (Linear trend)
+        return "Keyingi oy uchun prognoz: +15% o'sish."

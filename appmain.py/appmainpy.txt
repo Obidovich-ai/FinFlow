@@ -1,0 +1,19 @@
+from fastapi import FastAPI
+from app.core.analyzer import FinAnalyzer
+
+app = FastAPI(title="FinFlow Business API")
+ai_engine = FinAnalyzer()
+
+@app.get("/")
+def home():
+    return {"message": "FinFlow Business tizimi faol"}
+
+@app.get("/dashboard/stats")
+def get_stats():
+    # Bu yerda biznes uchun umumiy ko'rsatkichlar qaytadi
+    return {
+        "total_revenue": 25000000, # 25 mln so'm
+        "total_expenses": 12000000,
+        "net_profit": 13000000,
+        "ai_prediction": "Kelasi hafta savdo 10% ga oshishi kutilmoqda"
+    }

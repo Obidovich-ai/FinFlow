@@ -1,0 +1,11 @@
+import 'package:url_launcher/url_launcher.dart';
+
+_handlePayment(double amount) async {
+  // 1. Backenddan havola olish
+  String payUrl = await ApiService().getPaymeLink(amount);
+  
+  // 2. Brauzerda ochish
+  if (await canLaunchUrl(Uri.parse(payUrl))) {
+    await launchUrl(Uri.parse(payUrl), mode: LaunchMode.externalApplication);
+  }
+}

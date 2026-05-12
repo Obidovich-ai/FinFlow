@@ -1,0 +1,38 @@
+from fastapi import APIRouter, Request, HTTPException
+from ..database import SessionLocal, User, Transaction
+
+router = APIRouter(prefix="/webhooks", tags=["Payments"])
+
+@router.post("/payme")
+async def payme_webhook(request: Request):
+    data = await request.json()
+    db = SessionLocal()
+    
+    # Payme odatda 'CheckPerformTransaction' yoki 'Prepare' yuboradi
+    method = data.get("method")
+    params = data.get("params")
+
+    if method == "CheckPerformTransaction":
+        # To'lov qilishdan oldin foydalanuvchi borligini tekshirish
+        user_id = params['account']['user_id']
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"error": {"code": -31050, "message": "Foydalanuvchi topilmadi"}}
+        return {"result": {"allow": True}}
+
+    if method == "PerformTransaction":
+        # To'lov muvaffaqiyatli yakunlanganda balansni oshirish
+        order_id = params['id']
+        amount = params['amount'] / 100 # Tiyindan so'mga
+        
+        # Tranzaksiyani topish va yopish
+        transaction = db.query(Transaction).filter(Transaction.id == params['account']['order_id']).first()
+        if transaction and transaction.status != "completed":
+            transaction.status = "completed"
+            user = db.query(User).filter(User.id == transaction.user_id).first()
+            user.balance += amount
+            db.commit()
+            
+        return {"result": {"transaction": order_id, "perform_time": 123456789}}
+
+    return {"error": {"code": -32601, "message": "Metod topilmadi"}}

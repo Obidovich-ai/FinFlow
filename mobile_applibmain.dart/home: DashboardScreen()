@@ -38,7 +38,7 @@ class BusinessDashboard extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text("AI Tavsiyasi:", style: TextStyle(fontWeight: FontWeight.bold)),
-            Card(
+            Card(Navigator.push(context, MaterialPageRoute(builder: (context) => AIChatScreen
               color: Colors.blueGrey[900],
               child: ListTile(
                 leading: Icon(Icons.psychology, color: Colors.purpleAccent),

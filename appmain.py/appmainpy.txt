@@ -1,27 +1,40 @@
-from fastapi import FastAPI, Depends
-from .database import SessionLocal, User, Transaction
-from .payme_service import PaymeService
-
-app = FastAPI()
-payme = PaymeService(merchant_id="YOUR_ID", secret_key="YOUR_KEY")
-
-@app.post("/pay/create")
-def make_payment(user_id: int, sum: float):
-    db = SessionLocal()
-    # 1. Bazada yangi tranzaksiya ochish
-    new_tx = Transaction(user_id=user_id, amount=sum, status="pending", provider="payme")
-    db.add(new_tx)
-    db.commit()
-    
-    # 2. To'lov havolasini yaratish
-    link = payme.create_pay_link(sum, new_tx.id)
-    return {"pay_url": link}
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from .auth import router as auth_router
+from .database import SessionLocal, User, Transaction
+from .core.analyzer import FinAnalyzer
 
+app = FastAPI(title="FinFlow Pro API", version="1.5.0")
+
+# 1. CORS sozlamalari (Mobil ilova ulanishi uchun shart)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Barcha qurilmalarga ruxsat berish
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 2. Routerni ulash
+app.include_router(auth_router)
+
+ai_engine = FinAnalyzer()
+
+# 3. Dashboard uchun real ma'lumotlar olish
+@app.get("/dashboard/{user_id}")
+def get_user_dashboard(user_id: int):
+    db = SessionLocal()
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    
+    # Oxirgi tranzaksiyalarni olish
+    history = db.query(Transaction).filter(Transaction.user_id == user_id).limit(5).all()
+    
+    return {
+        "balance": user.balance,
+        "full_name": user.full_name,
+        "ai_analysis": ai_engine.get_business_health(user.balance, 5000000), # Namuna xarajat bilan
+        "recent_transactions": history
+    }

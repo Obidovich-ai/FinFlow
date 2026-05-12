@@ -51,3 +51,76 @@ class BusinessDashboard extends StatelessWidget {
     );
   }
 }
+// DashboardScreen ichida:
+bool isLoading = true;
+double balance = 0;
+String aiMessage = "";
+
+@override
+void initState() {
+  super.initState();
+  _loadData();
+}
+
+_loadData() async {
+  try {
+    final data = await ApiService().fetchDashboard(1); // 1 - foydalanuvchi IDsi
+    setState(() {
+      balance = data['balance'];
+      aiMessage = data['ai_analysis'];
+      isLoading = false;
+    });
+  } catch (e) {
+    print("Xato: $e");
+  }
+}
+// DashboardScreen ichida:
+bool isLoading = true;
+double balance = 0;
+String aiMessage = "";
+
+@override
+void initState() {
+  super.initState();
+  _loadData();
+}
+
+_loadData() async {
+  try {
+    final data = await ApiService().fetchDashboard(1); // 1 - foydalanuvchi IDsi
+    setState(() {
+      balance = data['balance'];
+      aiMessage = data['ai_analysis'];
+      isLoading = false;
+    });
+  } catch (e) {
+    print("Xato: $e");
+  }
+}
+// DashboardScreen ichida:
+bool isLoading = true;
+double balance = 0;
+String aiMessage = "";
+
+@override
+void initState() {
+  super.initState();
+  _loadData();
+}
+
+_loadData() async {
+  try {
+    final data = await ApiService().fetchDashboard(1); // 1 - foydalanuvchi IDsi
+    setState(() {
+      balance = data['balance'];
+      aiMessage = data['ai_analysis'];
+      isLoading = false;
+    });
+  } catch (e) {
+    print("Xato: $e");
+  }
+}
+
+// UI qismida:
+// Text("45,250,000 UZS") o'rniga ->
+Text("${balance.toStringAsFixed(0)} UZS", style: TextStyle(...))

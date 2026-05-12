@@ -16,3 +16,12 @@ def make_payment(user_id: int, sum: float):
     # 2. To'lov havolasini yaratish
     link = payme.create_pay_link(sum, new_tx.id)
     return {"pay_url": link}
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Barcha qurilmalarga ruxsat berish
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

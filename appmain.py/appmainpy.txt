@@ -1,19 +1,18 @@
-from fastapi import FastAPI
-from app.core.analyzer import FinAnalyzer
+from fastapi import FastAPI, Depends
+from .database import SessionLocal, User, Transaction
+from .payme_service import PaymeService
 
-app = FastAPI(title="FinFlow Business API")
-ai_engine = FinAnalyzer()
+app = FastAPI()
+payme = PaymeService(merchant_id="YOUR_ID", secret_key="YOUR_KEY")
 
-@app.get("/")
-def home():
-    return {"message": "FinFlow Business tizimi faol"}
-
-@app.get("/dashboard/stats")
-def get_stats():
-    # Bu yerda biznes uchun umumiy ko'rsatkichlar qaytadi
-    return {
-        "total_revenue": 25000000, # 25 mln so'm
-        "total_expenses": 12000000,
-        "net_profit": 13000000,
-        "ai_prediction": "Kelasi hafta savdo 10% ga oshishi kutilmoqda"
-    }
+@app.post("/pay/create")
+def make_payment(user_id: int, sum: float):
+    db = SessionLocal()
+    # 1. Bazada yangi tranzaksiya ochish
+    new_tx = Transaction(user_id=user_id, amount=sum, status="pending", provider="payme")
+    db.add(new_tx)
+    db.commit()
+    
+    # 2. To'lov havolasini yaratish
+    link = payme.create_pay_link(sum, new_tx.id)
+    return {"pay_url": link}

@@ -1,1 +1,60 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from ..database import SessionLocal, User
+from .security import AuthHandler
 
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+auth_handler = AuthHandler()
+
+@router.post("/register")
+def register(username: str, password: str):
+    db = SessionLocal()
+    hashed_pwd = auth_handler.get_password_hash(password)
+    new_user = User(full_name=username, hashed_password=hashed_pwd) # Bazaga hashed_password ustunini qo'shish kerak
+    db.add(new_user)
+    db.commit()
+    return {"message": "Muvaffaqiyatli ro'yxatdan o'tdingiz"}
+
+@router.post("/login")
+def login(username: str, password: str):
+    db = SessionLocal()
+    user = db.query(User).filter(User.full_name == username).first()
+    if not user or not auth_handler.verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Login yoki parol xato")
+    
+    token = auth_handler.create_access_token(data={"sub": user.full_name, "id": user.id})
+    return {"access_token": token, "token_type": "bearer"}
+
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class ApiService {
+  final String baseUrl = "https://api.finflow.uz";
+  final storage = FlutterSecureStorage();
+
+  // Login qilish va tokenni saqlash
+  Future<bool> login(String username, String password) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/auth/login"),
+      body: {"username": username, "password": password},
+    );
+
+    if (response.statusCode == 200) {
+      String token = json.decode(response.body)['access_token'];
+      await storage.write(key: "jwt_token", value: token);
+      return true;
+    }
+    return false;
+  }
+
+  // Token bilan himoyalangan ma'lumotni olish (Dashboard)
+  Future<Map<String, dynamic>> getDashboardData() async {
+    String? token = await storage.read(key: "jwt_token");
+    final response = await http.get(
+      Uri.parse("$baseUrl/dashboard/stats"),
+      headers: {"Authorization": "Bearer $token"}, // Tokenni yuborish
+    );
+    return json.decode(response.body);
+  }
+}
